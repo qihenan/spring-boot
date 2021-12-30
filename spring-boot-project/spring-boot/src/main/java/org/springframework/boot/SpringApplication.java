@@ -279,17 +279,23 @@ public class SpringApplication {
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
+		//设置应用程序类型
 		this.webApplicationType = WebApplicationType.deduceFromClasspath();
 		this.bootstrappers = new ArrayList<>(getSpringFactoriesInstances(Bootstrapper.class));
+		//取出初始化器的全限定名，并实例化
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+		//取出监听器的全限定名，并实例化
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+		//推断主应用程序
 		this.mainApplicationClass = deduceMainApplicationClass();
 	}
 
 	private Class<?> deduceMainApplicationClass() {
 		try {
+			//跟踪执行过程中的堆栈信息
 			StackTraceElement[] stackTrace = new RuntimeException().getStackTrace();
 			for (StackTraceElement stackTraceElement : stackTrace) {
+				//找到main函数，生成class对象
 				if ("main".equals(stackTraceElement.getMethodName())) {
 					return Class.forName(stackTraceElement.getClassName());
 				}
@@ -308,6 +314,7 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+		//计时器
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		DefaultBootstrapContext bootstrapContext = createBootstrapContext();
@@ -317,14 +324,25 @@ public class SpringApplication {
 		listeners.starting(bootstrapContext, this.mainApplicationClass);
 		try {
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+			//准备环境对象
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, bootstrapContext, applicationArguments);
 			configureIgnoreBeanInfo(environment);
+			//banner信息打印，可自定义
 			Banner printedBanner = printBanner(environment);
+			//获取上下文对象
 			context = createApplicationContext();
 			context.setApplicationStartup(this.applicationStartup);
+
+
+			//自动装配流程开始。。。。。。。。。。。。。。。。。
+
+
+			//向上下文中设置一系列属性值
 			prepareContext(bootstrapContext, context, environment, listeners, applicationArguments, printedBanner);
+			//
 			refreshContext(context);
 			afterRefresh(context, applicationArguments);
+			//记录结束时间
 			stopWatch.stop();
 			if (this.logStartupInfo) {
 				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), stopWatch);
@@ -387,7 +405,9 @@ public class SpringApplication {
 			ApplicationArguments applicationArguments, Banner printedBanner) {
 		context.setEnvironment(environment);
 		postProcessApplicationContext(context);
+		//初始化
 		applyInitializers(context);
+		//发布监听器：上下文已经准备完毕
 		listeners.contextPrepared(context);
 		bootstrapContext.close(context);
 		if (this.logStartupInfo) {
@@ -410,7 +430,9 @@ public class SpringApplication {
 		// Load the sources
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
+		//加载注解资源
 		load(context, sources.toArray(new Object[0]));
+		//监听器
 		listeners.contextLoaded(context);
 	}
 
@@ -460,6 +482,7 @@ public class SpringApplication {
 				Class<?> instanceClass = ClassUtils.forName(name, classLoader);
 				Assert.isAssignable(type, instanceClass);
 				Constructor<?> constructor = instanceClass.getDeclaredConstructor(parameterTypes);
+				//实例化
 				T instance = (T) BeanUtils.instantiateClass(constructor, args);
 				instances.add(instance);
 			}
@@ -616,6 +639,7 @@ public class SpringApplication {
 			}
 		}
 		if (this.addConversionService) {
+			//转换服务
 			context.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance());
 		}
 	}
@@ -764,6 +788,7 @@ public class SpringApplication {
 	 * @param applicationContext the application context to refresh
 	 */
 	protected void refresh(ConfigurableApplicationContext applicationContext) {
+		//spring中refresh方法
 		applicationContext.refresh();
 	}
 

@@ -165,6 +165,7 @@ class BeanDefinitionLoader {
 			((GroovyBeanDefinitionReader) this.groovyReader).beans(loader.getBeans());
 		}
 		if (isEligible(source)) {
+			//重点：扫描注解！！！！
 			this.annotatedReader.register(source);
 		}
 	}
